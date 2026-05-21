@@ -9,7 +9,7 @@ BEGIN
         acct_ident_id,
         acct_id,
         tran_type,
-        updated_acct_bal,
+        tran_amount,
         tran_time,
         tran_reversal_time,
         tran_desc
@@ -18,7 +18,7 @@ BEGIN
         NEW.acct_ident_id,
         NEW.acct_id,
         NEW.tran_type,
-        NEW.updated_acct_bal,
+        NEW.tran_amount,
         NEW.tran_time,
         NEW.tran_reversal_time,
         NEW.tran_desc
