@@ -37,7 +37,7 @@ public class TransactionController {
     @PostMapping("/accounts")
     @ResponseStatus(HttpStatus.CREATED)
     public Account createAccount(@RequestBody Account account) {
-        if(account == null) {
+        if (account == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account must not be null");
         }
         if (account.getAcctId() == null || account.getAcctId().toString().trim().isEmpty()) {
@@ -62,66 +62,67 @@ public class TransactionController {
     @PostMapping("/accounts/acctDetails")
     @ResponseStatus(HttpStatus.CREATED)
     public AccountDetails createAccountDetails(@RequestBody AccountDetails accountDetails) {
-        if (accountDetails == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "AccountDetails must not be null");
-        }
-        if (accountDetails.getAcctId() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "acctId must not be null for AccountDetails");
-        }
 
-        // New validations
-        validateNotBlank("acctIdentId", String.valueOf(accountDetails.getAcctIdentId()));
-        validateNotBlank("tranType", accountDetails.getTranType());
-        validateNotNull("updatedAcctBal", accountDetails.getTranAmount());
-        validateNotBlank("tranTime", String.valueOf(accountDetails.getTranTime()));
+        // validate the incoming account details
+        validateAccountDetails(accountDetails);
 
-        if(accountDetails.getTranType().equalsIgnoreCase("CR")
-                || accountDetails.getTranType().equalsIgnoreCase("WD")){
-            if(accountDetails.getTranAmount().signum() == 0 || accountDetails.getTranAmount().signum() == -1){
+        return accountService.saveAccountDetails(accountDetails);
+    }
+
+    @PutMapping("/accounts/{acctId}/acctDetails")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AccountDetails updateAccountDetails(@RequestBody AccountDetails accountDetails) {
+
+        // validate the incoming account details
+        validateAccountDetails(accountDetails);
+
+        if (accountDetails.getTranType().equalsIgnoreCase("CR")
+                || accountDetails.getTranType().equalsIgnoreCase("WD")) {
+            if (accountDetails.getTranAmount().signum() == 0 || accountDetails.getTranAmount().signum() == -1) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "tranAmount must be greater than > 0.00 for CR or WD transaction types");
             }
         }
 
-        if(accountDetails.getTranType().equalsIgnoreCase("DB")){
-            if(accountDetails.getTranAmount().signum() == 0 || accountDetails.getTranAmount().signum() == 1){
+        if (accountDetails.getTranType().equalsIgnoreCase("DB")) {
+            if (accountDetails.getTranAmount().signum() == 0 || accountDetails.getTranAmount().signum() == 1) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "tranAmount must be less than < 0.00 for DB transaction type");
             }
         }
 
-        BigDecimal totalBalance = new BigDecimal(0.00);
+        BigDecimal totalBalance;
         List<Account> accounts = getAccount(accountDetails.getAcctId().toString());
 
-        if(!accounts.isEmpty()){
+        if (!accounts.isEmpty()) {
             // Had to write defensive coding because I have single accounts which are created as only Savings.
             // Some acconts are created as both Checking and Savings. So I have to check for both types of accounts before I can proceed with the transaction logic.
             Account savingsAccount = accounts.stream().filter(a -> a.getAcctType().equalsIgnoreCase("SV")).findFirst().orElse(null);
             Account checkingAccount = accounts.stream().filter(a -> a.getAcctType().equalsIgnoreCase("CH")).findFirst().orElse(null);
-            if("SV".equalsIgnoreCase(savingsAccount.getAcctType())){
-                if(accountDetails.getTranType().equalsIgnoreCase("CR")){
+            if ("SV".equalsIgnoreCase(savingsAccount.getAcctType())) {
+                if (accountDetails.getTranType().equalsIgnoreCase("CR")) {
                     BigDecimal currAcctBal = savingsAccount.getAcctBalance();
                     totalBalance = currAcctBal.add(accountDetails.getTranAmount());
                     accountDetails.setTranAmount(totalBalance);
-                }else if(accountDetails.getTranType().equalsIgnoreCase("DB")){
+                } else if (accountDetails.getTranType().equalsIgnoreCase("DB")) {
                     BigDecimal currAcctBal = savingsAccount.getAcctBalance();
                     totalBalance = currAcctBal.divide(accountDetails.getTranAmount());
                     accountDetails.setTranAmount(totalBalance);
-                }else if(accountDetails.getTranType().equalsIgnoreCase("WD")){
+                } else if (accountDetails.getTranType().equalsIgnoreCase("WD")) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not allowed at this point");
                 }
-            }else if("CH".equalsIgnoreCase(savingsAccount.getAcctType())){
-                if(accountDetails.getTranType().equalsIgnoreCase("CR")){
-                    BigDecimal currAcctBal = savingsAccount.getAcctBalance();
+            } else if ("CH".equalsIgnoreCase(checkingAccount.getAcctType())) {
+                if (accountDetails.getTranType().equalsIgnoreCase("CR")) {
+                    BigDecimal currAcctBal = checkingAccount.getAcctBalance();
                     totalBalance = currAcctBal.add(accountDetails.getTranAmount());
                     accountDetails.setTranAmount(totalBalance);
-                }else if(accountDetails.getTranType().equalsIgnoreCase("DB")){
-                    BigDecimal currAcctBal = savingsAccount.getAcctBalance();
+                } else if (accountDetails.getTranType().equalsIgnoreCase("DB")) {
+                    BigDecimal currAcctBal = checkingAccount.getAcctBalance();
                     totalBalance = currAcctBal.divide(accountDetails.getTranAmount());
                     accountDetails.setTranAmount(totalBalance);
-                }else if(accountDetails.getTranType().equalsIgnoreCase("WD")){
+                } else if (accountDetails.getTranType().equalsIgnoreCase("WD")) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not allowed at this point");
                 }
             }
-        }else {
+        } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No Accounts exists with acctId " + accountDetails.getAcctId());
         }
 
@@ -140,6 +141,22 @@ public class TransactionController {
         }
     }
 
+    private void validateAccountDetails(AccountDetails accountDetails) {
+
+        if (accountDetails == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "AccountDetails must not be null");
+        }
+        if (accountDetails.getAcctId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "acctId must not be null for AccountDetails");
+        }
+
+        // New validations
+        validateNotBlank("acctIdentId", String.valueOf(accountDetails.getAcctIdentId()));
+        validateNotBlank("tranType", accountDetails.getTranType());
+        validateNotNull("updatedAcctBal", accountDetails.getTranAmount());
+        validateNotBlank("tranTime", String.valueOf(accountDetails.getTranTime()));
+
+    }
 
 }
 
