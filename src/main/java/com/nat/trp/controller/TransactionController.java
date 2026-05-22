@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -71,16 +72,57 @@ public class TransactionController {
         // New validations
         validateNotBlank("acctIdentId", String.valueOf(accountDetails.getAcctIdentId()));
         validateNotBlank("tranType", accountDetails.getTranType());
-        validateNotNull("updatedAcctBal", accountDetails.getUpdatedAcctBal());
+        validateNotNull("updatedAcctBal", accountDetails.getTranAmount());
         validateNotBlank("tranTime", String.valueOf(accountDetails.getTranTime()));
 
-        // Credit, Debit and Withdrawal logic - Not implemented yet TODO
-        if(accountDetails.getTranType().equalsIgnoreCase("CR")){
-            // Not implemented yet TODO
-        }else if(accountDetails.getTranType().equalsIgnoreCase("DB")){
-            // Not implemented yet TODO
-        }else if(accountDetails.getTranType().equalsIgnoreCase("WD")){
-            // Not implemented yet TODO
+        if(accountDetails.getTranType().equalsIgnoreCase("CR")
+                || accountDetails.getTranType().equalsIgnoreCase("WD")){
+            if(accountDetails.getTranAmount().signum() == 0 || accountDetails.getTranAmount().signum() == -1){
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "tranAmount must be greater than > 0.00 for CR or WD transaction types");
+            }
+        }
+
+        if(accountDetails.getTranType().equalsIgnoreCase("DB")){
+            if(accountDetails.getTranAmount().signum() == 0 || accountDetails.getTranAmount().signum() == 1){
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "tranAmount must be less than < 0.00 for DB transaction type");
+            }
+        }
+
+        BigDecimal totalBalance = new BigDecimal(0.00);
+        List<Account> accounts = getAccount(accountDetails.getAcctId().toString());
+
+        if(!accounts.isEmpty()){
+            // Had to write defensive coding because I have single accounts which are created as only Savings.
+            // Some acconts are created as both Checking and Savings. So I have to check for both types of accounts before I can proceed with the transaction logic.
+            Account savingsAccount = accounts.stream().filter(a -> a.getAcctType().equalsIgnoreCase("SV")).findFirst().orElse(null);
+            Account checkingAccount = accounts.stream().filter(a -> a.getAcctType().equalsIgnoreCase("CH")).findFirst().orElse(null);
+            if("SV".equalsIgnoreCase(savingsAccount.getAcctType())){
+                if(accountDetails.getTranType().equalsIgnoreCase("CR")){
+                    BigDecimal currAcctBal = savingsAccount.getAcctBalance();
+                    totalBalance = currAcctBal.add(accountDetails.getTranAmount());
+                    accountDetails.setTranAmount(totalBalance);
+                }else if(accountDetails.getTranType().equalsIgnoreCase("DB")){
+                    BigDecimal currAcctBal = savingsAccount.getAcctBalance();
+                    totalBalance = currAcctBal.divide(accountDetails.getTranAmount());
+                    accountDetails.setTranAmount(totalBalance);
+                }else if(accountDetails.getTranType().equalsIgnoreCase("WD")){
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not allowed at this point");
+                }
+            }else if("CH".equalsIgnoreCase(savingsAccount.getAcctType())){
+                if(accountDetails.getTranType().equalsIgnoreCase("CR")){
+                    BigDecimal currAcctBal = savingsAccount.getAcctBalance();
+                    totalBalance = currAcctBal.add(accountDetails.getTranAmount());
+                    accountDetails.setTranAmount(totalBalance);
+                }else if(accountDetails.getTranType().equalsIgnoreCase("DB")){
+                    BigDecimal currAcctBal = savingsAccount.getAcctBalance();
+                    totalBalance = currAcctBal.divide(accountDetails.getTranAmount());
+                    accountDetails.setTranAmount(totalBalance);
+                }else if(accountDetails.getTranType().equalsIgnoreCase("WD")){
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not allowed at this point");
+                }
+            }
+        }else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No Accounts exists with acctId " + accountDetails.getAcctId());
         }
 
         return accountService.saveAccountDetails(accountDetails);

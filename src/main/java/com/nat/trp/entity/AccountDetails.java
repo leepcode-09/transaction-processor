@@ -27,8 +27,8 @@ public class AccountDetails {
     @Column(name = "tran_type", length = 50, nullable = false)
     private String tranType;
 
-    @Column(name = "updated_acct_bal", precision = 15, scale = 2)
-    private BigDecimal updatedAcctBal;
+    @Column(name = "tran_amount", precision = 15, scale = 2)
+    private BigDecimal tranAmount;
 
     @Column(name = "tran_time", columnDefinition = "TIMESTAMP")
     private LocalDateTime tranTime;
@@ -56,8 +56,8 @@ public class AccountDetails {
     public String getTranType() { return tranType; }
     public void setTranType(String tranType) { this.tranType = tranType; }
 
-    public BigDecimal getUpdatedAcctBal() { return updatedAcctBal; }
-    public void setUpdatedAcctBal(BigDecimal updatedAcctBal) { this.updatedAcctBal = updatedAcctBal; }
+    public BigDecimal getTranAmount() { return tranAmount; }
+    public void setTranAmount(BigDecimal tranAmount) { this.tranAmount = tranAmount; }
 
     public LocalDateTime getTranTime() { return tranTime; }
     public void setTranTime(LocalDateTime tranTime) { this.tranTime = tranTime; }
@@ -88,7 +88,7 @@ public class AccountDetails {
                 ", acctIdentId=" + acctIdentId +
                 ", acctId=" + acctId +
                 ", tranType='" + tranType + '\'' +
-                ", updatedAcctBal=" + updatedAcctBal +
+                ", tranAmount=" + tranAmount +
                 ", tranTime=" + tranTime +
                 ", tranReversalTime=" + tranReversalTime +
                 ", tranDesc='" + tranDesc + '\'' +
