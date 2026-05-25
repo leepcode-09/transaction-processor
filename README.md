@@ -36,10 +36,11 @@ DB -> Debit,
 CR -> Credit, 
 WD -> Withdrawal
 
-## Given more time, I tought of adding more features like below:
+## Given more time, I thought of adding more features like below:
 -> Add proper logging using SLF4J and Logback
 -> Implement more comprehensive unit and integration tests using JUnit and Mockito
 -> Add more validations for account creation and transactions
+-> Add more exception handling for various error scenarios
 -> Add account ledger to track all transactions for each account
 
 ## Updated curl's for testing through Postman
