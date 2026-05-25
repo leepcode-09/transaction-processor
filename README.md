@@ -42,6 +42,7 @@ WD -> Withdrawal
 -> Add more validations for account creation and transactions
 -> Add more exception handling for various error scenarios
 -> Add account ledger to track all transactions for each account
+-> Implementing Withdrawal flow
 
 ## Updated curl's for testing through Postman
 <!-- Use these curl commands in Postman to test the API endpoints. -->
