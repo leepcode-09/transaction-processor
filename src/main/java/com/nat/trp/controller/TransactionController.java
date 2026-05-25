@@ -95,6 +95,7 @@ public class TransactionController {
         if (!accounts.isEmpty()) {
             // Had to write defensive coding because I have single accounts which are created as only Savings.
             // Some acconts are created as both Checking and Savings. So I have to check for both types of accounts before I can proceed with the transaction logic.
+            // CH -> Checking Account, SV -> Savings Account, DB -> Debit, CR -> Credit, WD -> Withdrawal
             Account savingsAccount = accounts.stream().filter(a -> a.getAcctType().equalsIgnoreCase("SV")).findFirst().orElse(null);
             Account checkingAccount = accounts.stream().filter(a -> a.getAcctType().equalsIgnoreCase("CH")).findFirst().orElse(null);
             if ("SV".equalsIgnoreCase(savingsAccount.getAcctType())) {

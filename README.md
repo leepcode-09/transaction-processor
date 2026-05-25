@@ -29,6 +29,18 @@ Simple Java / Maven project using Spring Boot.
 
 ## Edge Cases
 
+## Terminology
+CH -> Checking Account, 
+SV -> Savings Account, 
+DB -> Debit, 
+CR -> Credit, 
+WD -> Withdrawal
+
+## Given more time, I tought of adding more features like below:
+-> Add proper logging using SLF4J and Logback
+-> Implement more comprehensive unit and integration tests using JUnit and Mockito
+-> Add more validations for account creation and transactions
+-> Add account ledger to track all transactions for each account
 
 ## Updated curl's for testing through Postman
 <!-- Use these curl commands in Postman to test the API endpoints. -->
